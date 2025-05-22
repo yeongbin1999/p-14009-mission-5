@@ -1,5 +1,6 @@
 package com.back;
 
+import java.io.*;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -9,6 +10,9 @@ public class Main {
     private static Scanner sc = new Scanner(System.in);
 
     public static void main(String[] args) {
+        cnt = loadLastId();
+        loadWiseSayings();
+
         Map<String, Consumer<String>> commandMap = new HashMap<>();
 
         // 등록
@@ -18,8 +22,11 @@ public class Main {
             System.out.print("명언: ");
             String content = sc.nextLine().trim();
 
-            lst.add(new WiseSaying(++cnt, author, content));
+            WiseSaying ws = new WiseSaying(++cnt, author, content);
+            lst.add(ws);
             lst.sort(Comparator.comparingInt(w -> w.no));
+            ws.saveToFile();
+            saveLastId();
             System.out.println(cnt + "번 명언이 등록되었습니다.");
         });
 
@@ -48,6 +55,8 @@ public class Main {
                 }
                 else {
                     lst.remove(idx);
+                    File file = new File("db/wiseSaying/" + no + ".json");
+                    if(file.exists()) file.delete();
                     System.out.println(no + "번 명언이 삭제되었습니다.");
                 }
             }
@@ -79,6 +88,7 @@ public class Main {
                     System.out.println("명언(기존): " + ws.content);
                     System.out.print("명언: ");
                     ws.content = sc.nextLine().trim();
+                    ws.saveToFile();
                     System.out.println(no + "번 명언이 수정되었습니다.");
                 }
             }
@@ -93,15 +103,45 @@ public class Main {
             System.exit(0);
         });
 
+        // 빌드
+        commandMap.put("빌드", (cmd) -> {
+            try {
+                File dir = new File("db/wiseSaying");
+                if(!dir.exists()) dir.mkdirs();
+
+                try(FileWriter fw = new FileWriter("db/wiseSaying/data.json")) {
+
+                    fw.write("[\n");
+
+                    for (int i = 0; i < lst.size(); i++) {
+                        WiseSaying ws = lst.get(i);
+
+                        fw.write("  {\n");
+                        fw.write("    \"no\": " + ws.no + ",\n");
+                        fw.write("    \"author\": \"" + ws.author + "\",\n");
+                        fw.write("    \"content\": \"" + ws.content + "\"\n");
+                        fw.write("  }");
+
+                        if(i != lst.size() - 1) fw.write(",\n");
+                        else fw.write("\n");
+                    }
+
+                    fw.write("]\n");
+                }
+
+                System.out.println("data.json 파일의 내용이 갱신되었습니다.");
+            } catch (IOException e) {
+                System.out.println("파일 저장 실패: " + e.getMessage());
+            }
+        });
+
 
         System.out.println("== 명언 앱 ==");
 
         while(true) {
             System.out.print("명령) ");
             String cmd = sc.nextLine().trim();
-
             String key = cmd.contains("?") ? cmd.split("\\?")[0].trim() : cmd;
-
             Consumer<String> action = commandMap.get(key);
 
             if(action != null) action.accept(cmd);
@@ -125,6 +165,51 @@ public class Main {
         return -1;
     }
 
+    static void saveLastId() {
+        try {
+            File dir = new File("db/wiseSaying");
+            if(!dir.exists()) dir.mkdirs();
+
+            FileWriter fw = new FileWriter("db/wiseSaying/lastId.txt");
+            fw.write(String.valueOf(cnt));
+            fw.close();
+        }
+        catch(IOException e) {
+            System.out.println("lastId 저장 실패: " + e.getMessage());
+        }
+    }
+
+    static int loadLastId() {
+        try {
+            File file = new File("db/wiseSaying/lastId.txt");
+            if(!file.exists()) return 0;
+
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            int id = Integer.parseInt(br.readLine().trim());
+            br.close();
+            return id;
+        }
+        catch(IOException | NumberFormatException e) {
+            return 0;
+        }
+    }
+
+    static void loadWiseSayings() {
+        File dir = new File("db/wiseSaying");
+        if(!dir.exists()) return;
+
+        File[] files = dir.listFiles((d, name) -> name.endsWith(".json"));
+        if(files == null) return;
+
+        for(File file : files) {
+            if(file.getName().equals("lastId.txt")) continue;
+            WiseSaying ws = WiseSaying.loadFromFile(file);
+            if(ws != null) lst.add(ws);
+        }
+
+        lst.sort(Comparator.comparingInt(w -> w.no));
+    }
+
     static class WiseSaying {
         int no;
         String author;
@@ -139,6 +224,51 @@ public class Main {
         @Override
         public String toString() {
             return no + " / " + author + " / " + content;
+        }
+
+        public void saveToFile() {
+            try {
+                File dir = new File("db/wiseSaying");
+                if(!dir.exists()) dir.mkdirs();
+
+                FileWriter fw = new FileWriter("db/wiseSaying/" + no + ".json");
+                fw.write("{\n");
+                fw.write("  \"no\": " + no + ",\n");
+                fw.write("  \"author\": \"" + author + "\",\n");
+                fw.write("  \"content\": \"" + content + "\"\n");
+                fw.write("}\n");
+                fw.close();
+            }
+            catch(IOException e) {
+                System.out.println("파일 저장 실패: " + e.getMessage());
+            }
+        }
+
+        public static WiseSaying loadFromFile(File file) {
+            try(BufferedReader br = new BufferedReader(new FileReader(file))) {
+                int no = 0;
+                String author = "";
+                String content = "";
+
+                String line;
+                while((line = br.readLine()) != null) {
+                    line = line.trim();
+                    if(line.startsWith("\"no\"")) {
+                        no = Integer.parseInt(line.split(":")[1].trim().replace(",", ""));
+                    }
+                    else if(line.startsWith("\"author\"")) {
+                        author = line.split(":")[1].trim().replaceAll("^\"|\",?$", "");
+                    }
+                    else if(line.startsWith("\"content\"")) {
+                        content = line.split(":")[1].trim().replaceAll("^\"|\",?$", "");
+                    }
+                }
+                return new WiseSaying(no, author, content);
+            }
+            catch(IOException | NumberFormatException e) {
+                System.out.println(file.getName() + " 로딩 실패: " + e.getMessage());
+                return null;
+            }
         }
     }
 }
