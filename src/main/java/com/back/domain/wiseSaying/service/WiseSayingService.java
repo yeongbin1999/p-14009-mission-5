@@ -3,10 +3,8 @@ package com.back.domain.wiseSaying.service;
 import com.back.domain.wiseSaying.entity.WiseSaying;
 import com.back.domain.wiseSaying.repository.WiseSayingRepository;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class WiseSayingService {
     private final WiseSayingRepository repository;
@@ -45,34 +43,26 @@ public class WiseSayingService {
 
     public List<WiseSaying> list(Map<String, String> params) {
         List<WiseSaying> all = repository.list();
+        all = all.stream()
+                .sorted(Comparator.comparing(WiseSaying::getId).reversed())
+                .collect(Collectors.toList());
 
         String keywordType = params.get("keywordType");
         String keyword = params.get("keyword");
 
-        if (keywordType == null && keyword == null) {
-            return all;
-        }
-
-        if (keywordType == null || keyword == null || keywordType.isEmpty() || keyword.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        if (!keywordType.equals("author") && !keywordType.equals("content")) {
-            return Collections.emptyList();
-        }
-
-        List<WiseSaying> filtered = new ArrayList<>();
-
-        for(WiseSaying ws : all) {
-            if (keywordType.equals("author") && ws.getAuthor().contains(keyword)) {
-                filtered.add(ws);
-            } else if (keywordType.equals("content") && ws.getContent().contains(keyword)) {
-                filtered.add(ws);
+        if (keywordType != null && keyword != null) {
+            if (!keywordType.equals("author") && !keywordType.equals("content")) {
+                return Collections.emptyList();
             }
+
+            return all.stream()
+                    .filter(ws -> keywordType.equals("author") ? ws.getAuthor().contains(keyword) : ws.getContent().contains(keyword))
+                    .collect(Collectors.toList());
         }
 
-        return filtered;
+        return all;
     }
+
 
     public boolean build() {
         return repository.saveToBuildFile();

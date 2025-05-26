@@ -59,7 +59,7 @@ public class WiseSayingRepository {
                 String line;
                 while ((line = br.readLine()) != null) {
                     line = line.trim();
-                    if (line.startsWith("\"no\"")) {
+                    if (line.startsWith("\"id\"")) {
                         id = Integer.parseInt(line.split(":")[1].trim().replace(",", ""));
                     } else if (line.startsWith("\"author\"")) {
                         author = line.split(":")[1].trim().replace(",", "").replace("\"", "");
@@ -112,7 +112,7 @@ public class WiseSayingRepository {
         String fileName = dir + ws.getId() + ".json";
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(fileName))) {
             bw.write("{\n");
-            bw.write("  \"no\": " + ws.getId() + ",\n");
+            bw.write("  \"id\": " + ws.getId() + ",\n");
             bw.write("  \"author\": \"" + ws.getAuthor() + "\",\n");
             bw.write("  \"content\": \"" + ws.getContent() + "\"\n");
             bw.write("}");
@@ -129,7 +129,7 @@ public class WiseSayingRepository {
                 WiseSaying ws = lst.get(i);
 
                 bw.write("  {\n");
-                bw.write("    \"no\": " + ws.getId() + ",\n");
+                bw.write("    \"id\": " + ws.getId() + ",\n");
                 bw.write("    \"author\": \"" + ws.getAuthor() + "\",\n");
                 bw.write("    \"content\": \"" + ws.getContent() + "\"\n");
                 bw.write("  }");

@@ -18,10 +18,10 @@ public class WiseSayingController {
     }
 
     public void add(Map<String, String> params) {
-        System.out.print("작가: ");
-        String author = sc.nextLine().trim();
         System.out.print("명언: ");
         String content = sc.nextLine().trim();
+        System.out.print("작가: ");
+        String author = sc.nextLine().trim();
 
         int id = service.add(author, content);
         System.out.println(id + "번 명언이 등록되었습니다.");
@@ -29,13 +29,20 @@ public class WiseSayingController {
 
     public void list(Map<String, String> params) {
         List<WiseSaying> lst = service.list(params);
-        Collections.reverse(lst);
+
+
 
         System.out.println("번호 / 작가 / 명언");
         System.out.println("--------------------");
-        for (WiseSaying ws : lst) {
+        for (int i = 0 ; i < lst.size() ; i++) {
+            WiseSaying ws = lst.get(i);
             System.out.println(ws);
         }
+//        System.out.println("--------------------");
+//        System.out.println("페이지: ");
+//        for(int i = 1 ; i <= lst.size()/5 ; i++) {
+//            System.out.print(i + " ");
+//        }
     }
 
 

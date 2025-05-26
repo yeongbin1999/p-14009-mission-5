@@ -8,9 +8,17 @@ import java.util.*;
 import java.util.function.Consumer;
 
 public class App {
-    public void run() {
-        Scanner sc = new Scanner(System.in);
+    private final Scanner sc;
 
+    public App() {
+        this.sc = new Scanner(System.in);
+    }
+
+    public App(Scanner sc) {
+        this.sc = sc;
+    }
+
+    public void run() {
         WiseSayingRepository repository = new WiseSayingRepository();
         WiseSayingService service = new WiseSayingService(repository);
         WiseSayingController controller = new WiseSayingController(sc, service);
@@ -27,12 +35,19 @@ public class App {
 
         System.out.println("== 명언 앱 ==");
 
-        while (true) {
+        boolean running = true;
+        while (running) {
             System.out.print("명령) ");
             String cmd = sc.nextLine().trim();
 
             String key = cmd.contains("?") ? cmd.substring(0, cmd.indexOf("?")).trim() : cmd;
             String paramStr = cmd.contains("?") ? cmd.substring(cmd.indexOf("?") + 1).trim() : "";
+
+            if(key.equals("종료")) {
+                running = false;
+                System.out.println("프로그램을 종료합니다.");
+                continue;
+            }
 
             Consumer<Map<String, String>> action = commandMap.get(key);
             Map<String, String> params = parseParams(paramStr);
