@@ -9,13 +9,16 @@ import java.util.function.Consumer;
 
 public class App {
     private final Scanner sc;
+    private final boolean testMode;
 
     public App() {
         this.sc = new Scanner(System.in);
+        this.testMode = false;
     }
 
     public App(Scanner sc) {
         this.sc = sc;
+        this.testMode = true;
     }
 
     public void run() {
@@ -23,7 +26,7 @@ public class App {
         WiseSayingService service = new WiseSayingService(repository);
         WiseSayingController controller = new WiseSayingController(sc, service);
 
-        service.init();
+        if (!testMode) service.init();
 
         Map<String, Consumer<Map<String, String>>> commandMap = new HashMap<>();
         commandMap.put("등록", controller::add);
@@ -43,10 +46,12 @@ public class App {
             String key = cmd.contains("?") ? cmd.substring(0, cmd.indexOf("?")).trim() : cmd;
             String paramStr = cmd.contains("?") ? cmd.substring(cmd.indexOf("?") + 1).trim() : "";
 
-            if(key.equals("종료")) {
+            // exit으로 종료시 테스트가 불가능 (JVM 종료)
+            if (key.equals("종료")) {
                 running = false;
-                System.out.println("프로그램을 종료합니다.");
-                continue;
+                if (testMode) {
+                    continue;
+                }
             }
 
             Consumer<Map<String, String>> action = commandMap.get(key);

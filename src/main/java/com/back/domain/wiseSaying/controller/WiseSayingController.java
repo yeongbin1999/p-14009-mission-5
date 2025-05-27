@@ -29,8 +29,8 @@ public class WiseSayingController {
 
     public void list(Map<String, String> params) {
         List<WiseSaying> lst = service.list(params);
-
-
+        int totalPage = service.listSize(params);
+        int currentPage = Integer.parseInt(params.getOrDefault("page", "1"));
 
         System.out.println("번호 / 작가 / 명언");
         System.out.println("--------------------");
@@ -38,11 +38,16 @@ public class WiseSayingController {
             WiseSaying ws = lst.get(i);
             System.out.println(ws);
         }
-//        System.out.println("--------------------");
-//        System.out.println("페이지: ");
-//        for(int i = 1 ; i <= lst.size()/5 ; i++) {
-//            System.out.print(i + " ");
-//        }
+
+        System.out.println("--------------------");
+        System.out.print("폐이지: ");
+        for (int i = 1 ; i <= totalPage ; i++) {
+            if (i == currentPage) System.out.print('[');
+            System.out.print(i);
+            if (i == currentPage) System.out.print(']');
+            System.out.print(' ');
+        }
+        System.out.println();
     }
 
 
@@ -109,6 +114,5 @@ public class WiseSayingController {
     public void exit(Map<String, String> params) {
         service.exit();
         System.out.println("프로그램을 종료합니다.");
-        System.exit(0);
     }
 }

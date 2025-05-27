@@ -146,4 +146,7 @@ public class WiseSayingRepository {
         }
     }
 
+    public int listSize() {
+        return lst.size();
+    }
 }

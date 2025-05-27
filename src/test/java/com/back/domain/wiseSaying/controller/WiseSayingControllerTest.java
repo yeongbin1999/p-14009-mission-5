@@ -53,14 +53,9 @@ public class WiseSayingControllerTest {
     @Test
     @DisplayName("명언 삭제")
     void t3() {
-        AppTest.run("""
-                등록
-                인생은 짧고 예술은 길다.
-                히포크라테스
-                종료
-                """);
-
         String out = AppTest.run("""
+                모든 인간은 죽는다.
+                소크라테스
                 삭제?id=1
                 종료
                 """);
@@ -72,18 +67,13 @@ public class WiseSayingControllerTest {
     @Test
     @DisplayName("명언 수정")
     void t4() {
-        // 수정 테스트 시 명언 등록 후, 한 번의 run에서 수정 입력 모두 수행하도록 변경
-        AppTest.run("""
-                등록
-                실패는 성공의 어머니
-                작자미상
-                종료
-                """);
-
         String out = AppTest.run("""
+                등록
+                나는 생각한다 고로 존재한다.
+                데카르트
                 수정?id=1
-                고난은 성장의 기회다.
-                익명
+                모든 인간은 죽는다.
+                소크라테스
                 종료
                 """);
 
@@ -113,5 +103,23 @@ public class WiseSayingControllerTest {
 
         assertThat(out)
                 .contains("999번 명언은 존재하지 않습니다.");
+    }
+
+    @Test
+    @DisplayName("검색")
+    void t7() {
+        String out = AppTest.run("""
+                등록
+                나는 생각한다 고로 존재한다.
+                데카르트
+                등록
+                모든 인간은 죽는다.
+                소크라테스
+                목록?keywordType=author&keyword=소크라테스
+                종료
+                """);
+
+        assertThat(out)
+                .contains("2 / 소크라테스 / 모든 인간은 죽는다.");
     }
 }

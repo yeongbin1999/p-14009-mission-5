@@ -43,12 +43,11 @@ public class WiseSayingService {
 
     public List<WiseSaying> list(Map<String, String> params) {
         List<WiseSaying> all = repository.list();
-        all = all.stream()
-                .sorted(Comparator.comparing(WiseSaying::getId).reversed())
-                .collect(Collectors.toList());
+        all.sort(Comparator.comparing(WiseSaying::getId).reversed());
 
         String keywordType = params.get("keywordType");
         String keyword = params.get("keyword");
+        int page = Integer.parseInt(params.getOrDefault("page", "1"));
 
         if (keywordType != null && keyword != null) {
             if (!keywordType.equals("author") && !keywordType.equals("content")) {
@@ -57,12 +56,16 @@ public class WiseSayingService {
 
             return all.stream()
                     .filter(ws -> keywordType.equals("author") ? ws.getAuthor().contains(keyword) : ws.getContent().contains(keyword))
+                    .skip((page-1)*5)
+                    .limit(5)
                     .collect(Collectors.toList());
         }
 
-        return all;
+        return all.stream()
+                .skip((page-1)*5)
+                .limit(5)
+                .collect(Collectors.toList());
     }
-
 
     public boolean build() {
         return repository.saveToBuildFile();
@@ -70,5 +73,26 @@ public class WiseSayingService {
 
     public WiseSaying findById(int id) {
         return repository.findById(id);
+    }
+
+    public int listSize(Map<String, String> params) {
+        List<WiseSaying> all = repository.list();
+        all.sort(Comparator.comparing(WiseSaying::getId).reversed());
+
+        String keywordType = params.get("keywordType");
+        String keyword = params.get("keyword");
+
+        if (keywordType != null && keyword != null) {
+            if (!keywordType.equals("author") && !keywordType.equals("content")) {
+                return 1;
+            }
+
+            return all.stream()
+                    .filter(ws -> keywordType.equals("author") ? ws.getAuthor().contains(keyword) : ws.getContent().contains(keyword))
+                    .collect(Collectors.toList())
+                    .size()/5 + 1;
+        }
+
+        return all.size()/5 + 1;
     }
 }
